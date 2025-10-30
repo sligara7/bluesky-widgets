@@ -1,0 +1,26 @@
+# Docker Compose for BlueSky Queue Monitor Web
+# Usage: QUEUE_SERVER_URL=https://actual-queue.bnl.gov:443 docker-compose up
+
+version: '3.8'
+
+services:
+  queue-monitor:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      - QUEUE_SERVER_URL=${QUEUE_SERVER_URL:-https://default-queueserver.bnl.gov:443}
+    restart: unless-stopped
+
+# Example usage for different beamlines:
+#
+# For beamline 1:
+# QUEUE_SERVER_URL=https://queue-bl1.bnl.gov:443 docker-compose up
+#
+# For beamline 2:
+# QUEUE_SERVER_URL=https://queue-bl2.bnl.gov:443 docker-compose up
+#
+# Or create separate compose files:
+# cp docker-compose.yml docker-compose.bl1.yml
+# # Edit QUEUE_SERVER_URL in docker-compose.bl1.yml
+# docker-compose -f docker-compose.bl1.yml up

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueSky Queue Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #282c34;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Hide the tab buttons (we render both sections side-by-side) */
+        .tabs {
+            display: none;
+        }
+
+        /* Improve tab contrast if they are visible elsewhere */
+        .tab {
+            padding: 12px 22px;
+            border: none;
+            background: #f7f7f7;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            color: #222;
+            border-radius: 4px 4px 0 0;
+            margin: 6px 4px;
+        }
+
+        .tab:hover {
+            background-color: #ffffff;
+        }
+
+        .tab.active {
+            border-bottom-color: #0056b3;
+            background-color: #ffffff;
+            font-weight: 700;
+            color: #000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        /* Force both main sections visible and place them side-by-side */
+        .monitor-tab, .edit-tab {
+            display: block !important;
+            box-sizing: border-box;
+        }
+
+        .monitor-tab {
+            width: 60%;
+            float: left;
+        }
+
+        .edit-tab {
+            width: 38%;
+            float: right;
+        }
+
+        @media (max-width: 900px) {
+            .monitor-tab, .edit-tab {
+                width: 100%;
+                float: none;
+            }
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .monitor-tab, .edit-tab {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .connection-section, .status-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+        }
+
+        .connection-status {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .status-indicator.offline {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .status-indicator.online {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .queue-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+
+        .control-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .editor-sections {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        .queue-editor-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: white;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .plan-display, .queue-display, .history-display, .console-display {
+            min-height: 150px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background-color: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 300px;
+        }
+
+        .control-buttons, .editor-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        button.danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        button.danger:hover {
+            background-color: #c82333;
+        }
+
+        button.success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        button.success:hover {
+            background-color: #218838;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .failure {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .config-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .config-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .plan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .plan-actions button {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>BlueSky Queue Monitor</h1>
+            <div class="header-controls">
+                <button onclick="showConfigDialog()" class="config-btn">⚙️ Configure</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('monitor')">Monitor Queue</button>
+            <button class="tab" onclick="showTab('edit')">Edit and Control Queue</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Monitor Tab -->
+            <div id="monitor-tab" class="monitor-tab">
+                <div class="connection-section">
+                    <h2>Queue Server Connection</h2>
+                    <div class="connection-status">
+                        <span id="connection-status" class="status-indicator offline">OFFLINE</span>
+                        <button onclick="connect()">Connect</button>
+                        <button onclick="disconnect()" disabled>Disconnect</button>
+                    </div>
+                </div>
+
+                <div class="status-section">
+                    <h2>Status Monitor</h2>
+                    <div class="status-info">
+                        Status: <span id="status-text">Disconnected</span>
+                    </div>
+                </div>
+
+                <div class="queue-sections">
+                    <div class="section">
+                        <h2>Running Plan</h2>
+                        <div id="running-plan-display" class="plan-display">
+                            <p>No plan currently running</p>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Plan Queue</h2>
+                        <div id="queue-display" class="queue-display">
+                            <p>Queue is empty</p>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Plan History</h2>
+                        <div id="history-display" class="history-display">
+                            <p>No plans in history</p>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Console Monitor</h2>
+                        <div id="console-display" class="console-display">
+                            <p>No console output</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Tab -->
+            <div id="edit-tab" class="edit-tab hidden">
+                <div class="control-sections">
+                    <div class="section">
+                        <h2>Environment Controls</h2>
+                        <button id="env-destroy-btn" onclick="toggleEnvDestroy()">
+                            Activate Environment Destroy
+                        </button>
+                    </div>
+
+                    <div class="section">
+                        <h2>Queue Controls</h2>
+                        <div class="control-buttons">
+                            <button onclick="addPlan()">Add Plan</button>
+                            <button onclick="clearQueue()">Clear Queue</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Execution Controls</h2>
+                        <div class="control-buttons">
+                            <button id="start-btn" onclick="startQueue()" disabled>Start Queue</button>
+                            <button id="stop-btn" onclick="stopQueue()" disabled>Stop Queue</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Status Monitor</h2>
+                        <div class="status-info">
+                            Status: <span id="edit-status-text">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="editor-sections">
+                    <div class="section">
+                        <h2>Plan Editor</h2>
+                        <textarea id="plan-editor" placeholder="Enter plan code here..."></textarea>
+                        <div class="editor-buttons">
+                            <button onclick="savePlan()">Save Plan</button>
+                            <button onclick="clearEditor()">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="queue-editor-section">
+                        <div class="section">
+                            <h2>Running Plan</h2>
+                            <div id="edit-running-plan-display" class="plan-display">
+                                <p>No plan currently running</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2>Plan Queue</h2>
+                            <div id="edit-queue-display" class="queue-display">
+                                <p>Queue is empty</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2>Plan History</h2>
+                            <div id="edit-history-display" class="history-display">
+                                <p>No plans in history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let state = {
+            isConnected: false,
+            status: 'Disconnected',
+            plans: [],
+            runningPlan: null,
+            history: [],
+            logs: [],
+            envDestroyActivated: false,
+            isRunning: false,
+            planCounter: 1,
+            // API configuration
+            apiUrl: '',
+            apiKey: '',
+            pollInterval: null
+        };
+
+        // API functions
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            if (!state.apiUrl) {
+                throw new Error('API URL not configured');
+            }
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (state.apiKey) {
+                headers['Authorization'] = `Bearer ${state.apiKey}`;
+            }
+
+            const config = {
+                method,
+                headers
+            };
+
+            if (data) {
+                config.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(`${state.apiUrl}${endpoint}`, config);
+
+            if (!response.ok) {
+                throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+            }
+
+            return response.json();
+        }
+
+        async function connectToServer() {
+            try {
+                // Get server status
+                const status = await apiCall('/status');
+                state.isConnected = true;
+                state.status = 'Connected';
+                addLog('Connected to queue server');
+
+                // Start polling for updates
+                startPolling();
+
+                return true;
+            } catch (error) {
+                addLog(`Connection failed: ${error.message}`);
+                return false;
+            }
+        }
+
+        function disconnectFromServer() {
+            state.isConnected = false;
+            state.status = 'Disconnected';
+            stopPolling();
+            addLog('Disconnected from queue server');
+        }
+
+        async function loadQueueData() {
+            try {
+                // Load queue status
+                const queueData = await apiCall('/queue/status');
+
+                // Update state based on real data
+                state.plans = queueData.queue || [];
+                state.runningPlan = queueData.running_plan || null;
+                state.history = queueData.history || [];
+
+                // Update environment destroy status
+                if (queueData.environment) {
+                    state.envDestroyActivated = queueData.environment.destroy_activated || false;
+                }
+
+            } catch (error) {
+                addLog(`Failed to load queue data: ${error.message}`);
+            }
+        }
+
+        function startPolling() {
+            if (state.pollInterval) {
+                clearInterval(state.pollInterval);
+            }
+
+            state.pollInterval = setInterval(async () => {
+                if (state.isConnected) {
+                    await loadQueueData();
+                    updateUI();
+                }
+            }, 1000); // Poll every second
+        }
+
+        function stopPolling() {
+            if (state.pollInterval) {
+                clearInterval(state.pollInterval);
+                state.pollInterval = null;
+            }
+        }
+
+        // Configuration functions
+        function showConfigDialog() {
+            const apiUrl = prompt('Enter Queue Server HTTP URL:', state.apiUrl || 'https://vm_with_queueserver.bnl.gov');
+            if (apiUrl) {
+                state.apiUrl = apiUrl;
+            }
+
+            const apiKey = prompt('Enter API Key (leave empty if not required):', state.apiKey);
+            if (apiKey !== null) {
+                state.apiKey = apiKey;
+            }
+
+            localStorage.setItem('queueMonitorApiUrl', state.apiUrl);
+            localStorage.setItem('queueMonitorApiKey', state.apiKey);
+        }
+
+        function loadConfig() {
+            state.apiUrl = localStorage.getItem('queueMonitorApiUrl') || '';
+            state.apiKey = localStorage.getItem('queueMonitorApiKey') || '';
+        }
+
+        // Enhanced connection functions
+        async function connect() {
+            if (!state.apiUrl) {
+                showConfigDialog();
+            }
+
+            if (state.apiUrl) {
+                const success = await connectToServer();
+                if (success) {
+                    await loadQueueData();
+                }
+                updateUI();
+            }
+        }
+
+        function disconnect() {
+            disconnectFromServer();
+            updateUI();
+        }
+
+        // Enhanced control functions
+        async function toggleEnvDestroy() {
+            try {
+                const newState = !state.envDestroyActivated;
+                await apiCall('/environment/destroy', 'POST', { activated: newState });
+                state.envDestroyActivated = newState;
+                addLog(`Environment destroy ${newState ? 'activated' : 'deactivated'}`);
+                updateUI();
+            } catch (error) {
+                addLog(`Failed to toggle environment destroy: ${error.message}`);
+            }
+        }
+
+        async function addPlan() {
+            const planName = prompt('Enter plan name:');
+            if (planName) {
+                try {
+                    await apiCall('/queue/add', 'POST', {
+                        name: planName,
+                        // Add other plan parameters as needed
+                    });
+                    addLog(`Added plan: ${planName}`);
+                    await loadQueueData();
+                    updateUI();
+                } catch (error) {
+                    addLog(`Failed to add plan: ${error.message}`);
+                }
+            }
+        }
+
+        async function clearQueue() {
+            if (confirm('Are you sure you want to clear the entire queue?')) {
+                try {
+                    await apiCall('/queue/clear', 'POST');
+                    addLog('Queue cleared');
+                    await loadQueueData();
+                    updateUI();
+                } catch (error) {
+                    addLog(`Failed to clear queue: ${error.message}`);
+                }
+            }
+        }
+
+        async function startQueue() {
+            try {
+                await apiCall('/queue/start', 'POST');
+                state.isRunning = true;
+                addLog('Queue execution started');
+                await loadQueueData();
+                updateUI();
+            } catch (error) {
+                addLog(`Failed to start queue: ${error.message}`);
+            }
+        }
+
+        async function stopQueue() {
+            try {
+                await apiCall('/queue/stop', 'POST');
+                state.isRunning = false;
+                addLog('Queue execution stopped');
+                await loadQueueData();
+                updateUI();
+            } catch (error) {
+                addLog(`Failed to stop queue: ${error.message}`);
+            }
+        }
+
+        async function savePlan() {
+            const code = planEditor.value.trim();
+            if (code) {
+                try {
+                    await apiCall('/plans', 'POST', {
+                        code: code,
+                        name: `Plan ${state.planCounter++}`
+                    });
+                    addLog('Plan saved successfully');
+                    planEditor.value = '';
+                } catch (error) {
+                    addLog(`Failed to save plan: ${error.message}`);
+                }
+            }
+        }
+
+        // Initialize
+        loadConfig();
+        updateUI();
+    </script>
+</body>
+</html>

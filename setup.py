@@ -63,6 +63,8 @@ setup(
         "console_scripts": [
             "queue-monitor = bluesky_widgets.apps.queue_monitor.main:main"
             # 'command = some.module:some_function',
+            ,
+            "queue-monitor-web = bluesky_widgets.apps.queue_monitor_web.serve:main"
         ],
     },
     include_package_data=True,
@@ -71,6 +73,8 @@ setup(
             # When adding files here, remember to update MANIFEST.in as well,
             # or else they will not be included in the distribution on PyPI!
             # 'path/to/data_file',
+            "apps/queue_monitor_web/*",
+            "apps/queue_monitor_web/**/*",
         ]
     },
     install_requires=requirements,

@@ -83,3 +83,5 @@ target/
 Untitled*.ipynb
 
 dask-worker-space/
+external/
+bluesky_widgets/apps/queue_monitor_web/node_modules/

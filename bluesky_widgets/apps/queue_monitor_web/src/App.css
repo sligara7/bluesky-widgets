@@ -1,0 +1,255 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  background-color: #e9ecef; /* slightly darker for contrast */
+  border-bottom: 1px solid #bdbdbd;
+}
+
+.tab {
+  padding: 10px 20px;
+  border: none;
+  background: #f7f7f7; /* light but not white */
+  cursor: pointer;
+  font-size: 16px;
+  border-bottom: 2px solid transparent;
+  color: #222; /* dark text for good contrast */
+  border-radius: 4px 4px 0 0;
+  margin: 6px 4px;
+}
+
+.tab:hover {
+  background: #ffffff;
+}
+
+.tab.active {
+  border-bottom-color: #0056b3; /* stronger blue */
+  background-color: #ffffff;
+  color: #000; /* highest contrast */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.tab-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.combined-layout {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.combined-left, .combined-right {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .combined-layout {
+    flex-direction: column;
+    padding: 10px;
+  }
+}
+
+/* New flow layout for left-to-right experiment setup */
+.flow-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.flow-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.connection-col { width: 28%; }
+.env-col { width: 18%; }
+.exec-col { width: 28%; }
+.history-col { width: 24%; }
+
+.console-bottom {
+  grid-column: 1 / -1;
+  margin: 20px;
+}
+
+@media (max-width: 1000px) {
+  .flow-layout { flex-direction: column; }
+  .connection-col, .env-col, .exec-col, .history-col { width: 100%; }
+}
+
+.monitor-tab, .edit-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.connection-section, .status-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.connection-status {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.status-indicator {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status-indicator.offline {
+  background-color: #dc3545;
+  color: white;
+}
+
+.status-indicator.online {
+  background-color: #28a745;
+  color: white;
+}
+
+.queue-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 20px;
+}
+
+.control-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.editor-sections {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+.queue-editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.section h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.plan-display, .queue-display, .history-display, .console-display {
+  min-height: 150px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.control-buttons, .editor-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  padding: 8px 16px;
+  border: 1px solid #007bff;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.success {
+  color: #28a745;
+  margin-left: 10px;
+}
+
+.failure {
+  color: #dc3545;
+  margin-left: 10px;
+}
+
+pre {
+  text-align: left;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
